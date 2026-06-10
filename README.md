@@ -32,7 +32,7 @@ defenses — all within a strict **black-box threat model**.
 | **Dataset** | CIFAR-10 (60 000 images, 10 classes) |
 | **Threat model** | Black-box only — attacker sees probabilities, never weights |
 | **Attacks** | Random Query, Knockoff Nets, Active Learning |
-| **Defenses** | Rounding, Gaussian Noise, Laplace Noise, Top-K, Throttling, Prediction Poisoning, Adaptive Noise |
+| **Defenses** | Throttling, Prediction Poisoning, Adaptive Noise |
 
 ---
 
@@ -40,10 +40,9 @@ defenses — all within a strict **black-box threat model**.
 
 | Item | Specification |
 |------|--------------|
-| Python | **3.9.25** (strict — no 3.10+ features) |
-| GPU | NVIDIA RTX 4070 (12 GB VRAM) |
-| CUDA | 12.1 |
-| OS | Linux |
+| Python | 3.9+ (developed under 3.9; also runs on 3.13) |
+| Compute | Device-agnostic: CUDA GPU → Apple Silicon (MPS) → CPU |
+| Notes | Originally targeted RTX 4070 / CUDA 12.1; results here produced on Apple MPS |
 
 ---
 
@@ -51,18 +50,19 @@ defenses — all within a strict **black-box threat model**.
 
 ```bash
 # 1. Create and activate a virtual environment (recommended)
-python3.9 -m venv venv
+python3 -m venv venv
 source venv/bin/activate
 
-# 2. Install PyTorch with CUDA 12.1
-pip install torch==2.1.0 torchvision==0.16.0 \
-    --index-url https://download.pytorch.org/whl/cu121
+# 2. Install PyTorch
+#    CUDA machine:
+pip install torch==2.1.0 torchvision==0.16.0 --index-url https://download.pytorch.org/whl/cu121
+#    macOS (Apple Silicon) / CPU: just `pip install torch torchvision`
 
 # 3. Install remaining dependencies
-pip install numpy==1.24.0 pandas==2.0.0 \
-    matplotlib==3.7.0 seaborn==0.12.0 \
-    scikit-learn==1.3.0 flask==3.0.0 tqdm==4.65.0
+pip install -r requirements.txt
 ```
+
+> The interactive dashboard runs on **Streamlit** (`streamlit run dashboard.py`).
 
 ---
 
@@ -73,8 +73,9 @@ project/
 ├── victim.py            # Victim model training & black-box query API
 ├── threat_model.py      # Threat model, query budgets, knowledge levels
 ├── attack.py            # 3 attack strategies + substitute architectures
-├── defenses.py          # 7 defense mechanisms (20 parameter variants)
+├── defenses.py          # 3 defense mechanisms (6 active parameter variants)
 ├── evaluate.py          # Full evaluation pipeline, CSV, charts
+├── dashboard.py         # Interactive Streamlit dashboard
 ├── data_loader.py       # CIFAR-10 data loading & transforms
 ├── requirements.txt     # Pinned dependencies
 ├── README.md            # This file
@@ -93,7 +94,7 @@ project/
 
 ## How to Run
 
-### Step 1 — Train victim models
+### Step 1 — Train victim model
 
 ```bash
 python victim.py
@@ -128,6 +129,14 @@ python attack.py
 python defenses.py
 ```
 
+### Step 4 — Interactive dashboard (optional)
+
+```bash
+streamlit run dashboard.py
+```
+
+Opens a local web UI to explore the victim, attacks, defenses, and results.
+
 ---
 
 ## Modules
@@ -145,7 +154,7 @@ python defenses.py
   **probability vectors** — no weights, no gradients.
 
 ### `threat_model.py`
-- Defines query budgets: 1 000 / 5 000 / 10 000 / 50 000.
+- Defines query budget tiers: 1 000 / 5 000 / 10 000 (the evaluation uses 1 000 and 5 000).
 - Defines attacker knowledge levels (random vs. in-domain queries).
 - `QueryGenerator` creates the right query data.
 - `QueryExecutor` enforces the budget limit.
@@ -158,14 +167,14 @@ python defenses.py
 - Two substitute architectures: `SmallCNN`, `MobileNetV3-Small`.
 
 ### `defenses.py`
-- 7 defense classes, each callable: `defense_fn(probs) → probs`.
+- 3 defense classes, each callable: `defense_fn(probs) → probs`.
 - Stateful defenses (Throttling, Adaptive Noise) have `.reset()`.
-- `get_all_defenses()` returns 20 named parameter variants.
+- `get_all_defenses()` returns 7 named entries (baseline `none` + 6 active variants).
 
 ### `evaluate.py`
 - Orchestrates the full experiment matrix.
 - Computes 8 metrics per combination.
-- Saves results to CSV and generates 7 chart types.
+- Saves results to CSV and generates 5 chart types.
 
 ---
 
@@ -183,13 +192,13 @@ python defenses.py
 
 | # | Defense | Parameters Tested |
 |---|---------|-------------------|
-| 1 | Rounding | k = 1, 2, 3 |
-| 2 | Gaussian Noise | σ = 0.01, 0.05, 0.10 |
-| 3 | Laplace Noise | scale = 0.05, 0.10 |
-| 4 | Top-K Output | k = 1, 2, 3 |
-| 5 | Throttling | max = 250, 500, 1 000 |
-| 6 | Prediction Poisoning | rate = 0.10, 0.30, 0.50 |
-| 7 | Adaptive Noise | base + aggressive config |
+| 1 | Throttling | max = 250, 500, 1 000 |
+| 2 | Prediction Poisoning | rate = 0.30, 0.50 |
+| 3 | Adaptive Noise | aggressive config (base σ = 0.02, ×10 escalation after 500 queries) |
+
+> Weaker defenses (rounding, fixed Gaussian/Laplace noise, top-K, low-rate poisoning,
+> mild adaptive noise) were trialled but removed after empirical testing — they reduced
+> fidelity by ≤10 pp while the attacker still succeeded.
 
 ---
 
@@ -212,22 +221,21 @@ python defenses.py
 
 After running `evaluate.py`, check:
 
-- **`experiments/results/experiment_results.csv`** — raw numbers.
-- **`experiments/charts/`** — publication-quality plots:
-  - `fidelity_per_defense.png` — bar chart
-  - `protection_per_defense.png` — bar chart
-  - `security_vs_utility.png` — scatter plot
-  - `fidelity_vs_budget.png` — line chart
-  - `heatmap_fidelity.png` — heatmap
-  - `heatmap_substitute_accuracy.png` — heatmap
-  - `heatmap_protection_score.png` — heatmap
+- **`experiments/results/*.csv`** — raw numbers
+  (`results_no_defense_resnet50.csv`, `results_with_defense_resnet50.csv`).
+- **`experiments/charts/`** — generated plots:
+  - `fidelity_comparison.png` — fidelity per defense (bar chart)
+  - `protection_scores.png` — protection score per defense (bar chart)
+  - `security_utility_tradeoff.png` — security vs. utility (scatter)
+  - `fidelity_vs_query_budget.png` — fidelity vs. budget (line chart)
+  - `attack_defense_heatmap.png` — fidelity heatmap (attack × defense)
 
 ---
 
 ## Reproducibility
 
-- Fixed random seed: `torch.manual_seed(42)` in every module.
-- Deterministic cuDNN: `cudnn.deterministic = True`.
+- Fixed random seed (`42`) across Python, NumPy, and PyTorch in every module.
+- Deterministic settings enabled (cuDNN deterministic on CUDA; device-agnostic elsewhere).
 - Pinned library versions in `requirements.txt`.
 
 ---
