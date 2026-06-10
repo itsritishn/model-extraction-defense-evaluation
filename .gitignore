@@ -1,0 +1,61 @@
+# ── Large data & model artifacts (regenerated / auto-downloaded) ──
+# CIFAR-10 auto-downloads via data_loader.py (340MB incl. a >100MB file)
+data/
+# trained .pth checkpoints (225MB) — retrain via victim.py / evaluate.py
+models/
+*.pth
+
+# ── Private dissertation writing (keep OFF the public repo) ──
+DISSERTATION_DRAFT.md
+CHAPTER_2_DRAFT.md
+CHAPTER_3_DRAFT.md
+CHAPTER_4_DRAFT.md
+CHAPTER_5_DRAFT.md
+CHAPTER_6_DRAFT.md
+SUPERVISOR_MEETING_CRIB.md
+
+# ── Local junk / scratch ──
+junk/
+Junk/
+.DS_Store
+experiments/_archive_efficientnet/
+experiments/backup_pre_rerun/
+experiments/eval_run.log
+*.log
+
+# ── Byte-compiled / cache ──
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# ── Environments ──
+.Python
+env/
+venv/
+ENV/
+.env
+
+# ── Editor / OS ──
+.ipynb_checkpoints
+.python-version
+.spyderproject
+.ropeproject
+
+# ── Packaging / build ──
+build/
+dist/
+*.egg-info/
+.eggs/
+.installed.cfg
+*.egg
+
+# ── Test / coverage ──
+.coverage
+.coverage.*
+.cache
+htmlcov/
+.tox/
+coverage.xml
+nosetests.xml
+.hypothesis/

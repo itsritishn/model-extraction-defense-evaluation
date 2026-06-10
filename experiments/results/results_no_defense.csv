@@ -1,0 +1,13 @@
+attack,defense,budget,substitute_arch,victim_arch,victim_accuracy,substitute_accuracy,fidelity,protection_score,utility_cost,query_efficiency,attack_roi,defense_latency_ms,meta_attack,meta_queries_used,meta_query_time_s,meta_rounds,meta_train_time_s
+random_query,none,1000,small_cnn,resnet50,82.65,10.0,10.02,0.879,0.0,10.02,0.01,0.0,random_query,1000,0.78,,11.05
+random_query,none,1000,mobilenetv3_small,resnet50,82.65,10.0,10.02,0.879,0.0,10.02,0.01,0.0,random_query,1000,0.66,,6.7
+random_query,none,5000,small_cnn,resnet50,82.65,10.0,10.02,0.879,0.0,2.004,0.002,0.0,random_query,5000,4.12,,51.59
+random_query,none,5000,mobilenetv3_small,resnet50,82.65,10.0,10.02,0.879,0.0,2.004,0.002,0.0,random_query,5000,3.41,,31.21
+knockoff_nets,none,1000,small_cnn,resnet50,82.65,32.34,33.62,0.6087,0.0,33.62,0.03234,0.0,knockoff_nets,1000,0.68,,9.69
+knockoff_nets,none,1000,mobilenetv3_small,resnet50,82.65,10.0,10.27,0.879,0.0,10.27,0.01,0.0,knockoff_nets,1000,0.7,,6.15
+knockoff_nets,none,5000,small_cnn,resnet50,82.65,43.26,45.54,0.4766,0.0,9.108,0.008652,0.0,knockoff_nets,5000,2.85,,51.15
+knockoff_nets,none,5000,mobilenetv3_small,resnet50,82.65,68.63,71.24,0.1696,0.0,14.248,0.013726,0.0,knockoff_nets,5000,2.9,,33.05
+active_learning,none,1000,small_cnn,resnet50,82.65,33.02,34.52,0.6005,0.0,34.52,0.03302,0.0,active_learning,1000,22.43,5,9.89
+active_learning,none,1000,mobilenetv3_small,resnet50,82.65,10.0,10.02,0.879,0.0,10.02,0.01,0.0,active_learning,1000,19.21,5,6.26
+active_learning,none,5000,small_cnn,resnet50,82.65,43.67,45.78,0.4716,0.0,9.156,0.008734,0.0,active_learning,5000,62.55,5,51.27
+active_learning,none,5000,mobilenetv3_small,resnet50,82.65,69.47,71.81,0.1595,0.0,14.362,0.013894,0.0,active_learning,5000,44.79,5,32.93
